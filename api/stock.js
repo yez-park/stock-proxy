@@ -1,4 +1,7 @@
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // CORS 허용
+  res.setHeader('Access-Control-Allow-Methods', 'GET'); // 필요한 메서드 지정
+  
   const { code } = req.query;
 
   if (!code) {
