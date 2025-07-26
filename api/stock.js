@@ -1,7 +1,12 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // CORS 허용
-  res.setHeader('Access-Control-Allow-Methods', 'GET'); // 필요한 메서드 지정
-  
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end(); // CORS 프리플라이트 대응
+  }
+
   const { code } = req.query;
 
   if (!code) {
@@ -19,10 +24,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Price not found' });
     }
 
-    res.status(200).json({
-      code,
-      price,
-    });
+    res.status(200).json({ code, price });
   } catch (err) {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
