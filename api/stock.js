@@ -1,31 +1,18 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end(); // CORS 프리플라이트 대응
-  }
-
-  const { code } = req.query;
-
-  if (!code) {
-    return res.status(400).json({ error: 'code query parameter is required' });
-  }
-
-  try {
-    const response = await fetch(`https://finance.naver.com/item/main.nhn?code=${code}`);
-    const html = await response.text();
-
-    const match = html.match(/<span class="[^"]*?blind[^"]*?">([\d,]+)<\/span>/);
-    const price = match ? match[1] : null;
-
-    if (!price) {
-      return res.status(404).json({ error: 'Price not found' });
+  const code = req.query.code || "005930";
+  const response = await fetch(`https://api.finance.naver.com/siseJson.naver?symbol=${code}&requestType=1&startTime=20200701&endTime=20200726&timeframe=day`, {
+    headers: {
+      Referer: "https://finance.naver.com"
     }
+  });
 
-    res.status(200).json({ code, price });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error', details: err.message });
-  }
+  const text = await response.text();
+  const json = JSON.parse(text.replace(/^\s*\/\/.*\n/, ''));
+  const latest = json[json.length - 1];
+
+  res.status(200).json({ code, price: latest[1].toString() });
 }
