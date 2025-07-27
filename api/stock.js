@@ -13,24 +13,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`https://finance.naver.com/item/main.nhn?code=${code}`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-      },
-    });
+    const response = await fetch(`https://finance.naver.com/item/main.nhn?code=${code}`);
     const html = await response.text();
 
-    // blind span 중 첫 번째 값만 가져오기 (현재가)
-    const match = html.match(/<span class="[^"]*?blind[^"]*?">([\d,]+)<\/span>/);
-    const priceStr = match ? match[1] : null;
+    // 모든 blind 값을 찾기
+    const matches = [...html.matchAll(/<span class="[^"]*?blind[^"]*?">([\d,.\-%↑↓+]+)<\/span>/g)];
 
-    if (!priceStr) {
-      return res.status(404).json({ error: "price not found in HTML" });
+    // 순서에 따라 값을 가져옴
+    const priceStr = matches[0]?.[1] || null; // 현재가
+    const diffAmountStr = matches[1]?.[1] || null; // 전일 대비 금액
+    const diffRateStr = matches[2]?.[1] || null; // 전일 대비 퍼센트
+
+    if (!priceStr || !diffAmountStr || !diffRateStr) {
+      return res.status(404).json({ error: "stock info not found in HTML" });
     }
 
     res.status(200).json({
       code,
       price: priceStr,
+      diffAmount: diffAmountStr,
+      diffRate: diffRateStr
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch or parse", details: err.message });
