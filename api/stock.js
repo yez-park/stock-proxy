@@ -13,14 +13,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`https://finance.naver.com/item/main.nhn?code=${code}`);
+    const response = await fetch(`https://finance.naver.com/item/main.nhn?code=${code}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      },
+    });
+
     const html = await response.text();
 
-    // 종목명 추출
+    // 종목명
     const nameMatch = html.match(/<div class="wrap_company">\s*<h2><a[^>]*>(.*?)<\/a><\/h2>/);
     const name = nameMatch ? nameMatch[1].trim() : null;
 
-    // 모든 blind 값 추출
+    // 주가 정보
     const matches = [...html.matchAll(/<span class="[^"]*?blind[^"]*?">([\d,.\-%↑↓+]+)<\/span>/g)];
 
     const priceStr = matches[0]?.[1] || null;
@@ -36,7 +41,7 @@ export default async function handler(req, res) {
       name,
       price: priceStr,
       diffAmount: diffAmountStr,
-      diffRate: diffRateStr
+      diffRate: diffRateStr,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch or parse", details: err.message });
