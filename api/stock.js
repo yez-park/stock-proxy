@@ -20,6 +20,7 @@ export default async function handler(req, res) {
     // 주가 정보는 <span class="blind">XXXXX</span> 형태로 포함돼 있음
     const match = html.match(/<span class="[^"]*?blind[^"]*?">([\d,]+)<\/span>/);
     const priceStr = match ? match[1] : null;
+    const diffRateStr = matches[2]?.[1] || null; // 전일 대비 퍼센트
 
     if (!priceStr) {
       return res.status(404).json({ error: "price not found in HTML" });
