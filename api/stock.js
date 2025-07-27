@@ -24,12 +24,17 @@ export default async function handler(req, res) {
     const diffAmountStr = matches[1]?.[1] || null; // 전일 대비 금액
     const diffRateStr = matches[2]?.[1] || null; // 전일 대비 퍼센트
 
-    if (!priceStr || !diffAmountStr || !diffRateStr) {
+    // 종목명 추출
+    const nameMatch = html.match(/<div class="wrap_company">\s*<h2>\s*<a[^>]*>([^<]+)<\/a>/);
+    const name = nameMatch?.[1]?.trim() || null;
+
+    if (!priceStr || !diffAmountStr || !diffRateStr || !name) {
       return res.status(404).json({ error: "stock info not found in HTML" });
     }
 
     res.status(200).json({
       code,
+      name,
       price: priceStr,
       diffAmount: diffAmountStr,
       diffRate: diffRateStr
